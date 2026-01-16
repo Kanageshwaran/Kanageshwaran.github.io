@@ -70,7 +70,7 @@ export function Homepage() {
       <section className="container mx-auto px-8 py-8">
         <div className="flex gap-6 justify-center">
           <a
-            href="https://linkedin.com/in/kanageshwaran-dhakshinamoorthy"
+            href="https://linkedin.com/in/dkanageshwaran"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -81,7 +81,7 @@ export function Homepage() {
           </a>
 
           <a
-            href="https://github.com/your-github-username"
+            href="https://github.com/Kanageshwaran"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -156,7 +156,7 @@ export function Homepage() {
             I’m open to internships, full-time roles, and project collaborations. Feel free to reach out.
           </p>
           <Button asChild size="lg">
-            <a href="mailto:your.email@example.com">Send Email</a>
+            <a href="mailto:kdhakshinamoorthy@csus.edu">Send Email</a>
           </Button>
         </div>
       </section>
