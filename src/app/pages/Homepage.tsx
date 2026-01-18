@@ -1,37 +1,152 @@
-import { Link } from 'react-router-dom';
-import { Download, Linkedin, Github, Handshake } from 'lucide-react';
-import { subjects, activities } from '../data/mockData';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import profileImage from '../../assets/profile.jpg';
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Download, Linkedin, Github, Handshake } from "lucide-react";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  fetchProfile,
+  fetchSocialLinks,
+  fetchSubjectsPreview,
+  fetchActivitiesPreview,
+  fetchActivitiesCount,
+} from "../../services/portfolioService";
 
-const PROFILE_IMAGE = profileImage;
+type ProfileRow = {
+  full_name: string;
+  hero_title: string;
+  hero_description: string;
+  about_title: string;
+  about_paragraph_1: string;
+  about_paragraph_2: string | null;
+  email: string;
+  resume_url: string | null;
+  profile_image?: { public_url: string; alt_text: string | null } | null;
+};
+
+type SocialLinkRow = {
+  id: string;
+  label: string;
+  url: string;
+  icon: string | null;
+};
+
+type SubjectRow = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string | null;
+  course_count?: number; // if using subjects_with_counts in preview, this will exist
+};
+
+type ActivityRow = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+function iconForSocial(icon: string | null, label: string) {
+  const key = (icon ?? label).toLowerCase();
+  if (key.includes("linkedin")) return <Linkedin className="w-6 h-6" />;
+  if (key.includes("github")) return <Github className="w-6 h-6" />;
+  if (key.includes("handshake")) return <Handshake className="w-6 h-6" />;
+  return null;
+}
 
 export function Homepage() {
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [socialLinks, setSocialLinks] = useState<SocialLinkRow[]>([]);
+  const [subjects, setSubjects] = useState<SubjectRow[]>([]);
+  const [activities, setActivities] = useState<ActivityRow[]>([]);
+  const [activitiesCount, setActivitiesCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setLoading(true);
+      setErrorMsg(null);
+
+      const [p, s, subj, actPreview, actCount] = await Promise.all([
+        fetchProfile(),
+        fetchSocialLinks(),
+        fetchSubjectsPreview(6),
+        fetchActivitiesPreview(4),
+        fetchActivitiesCount(),
+      ]);
+
+      if (!mounted) return;
+
+      if (p.error) return setErrorMsg(p.error.message);
+      if (s.error) return setErrorMsg(s.error.message);
+      if (subj.error) return setErrorMsg(subj.error.message);
+      if (actPreview.error) return setErrorMsg(actPreview.error.message);
+      if (actCount.error) return setErrorMsg(actCount.error.message);
+
+      setProfile(p.data as ProfileRow);
+      setSocialLinks((s.data ?? []) as SocialLinkRow[]);
+      setSubjects((subj.data ?? []) as SubjectRow[]);
+      setActivities((actPreview.data ?? []) as ActivityRow[]);
+      setActivitiesCount(actCount.count ?? 0);
+
+      setLoading(false);
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const profileImage = profile?.profile_image?.public_url;
+
   return (
     <div className="w-full">
+      {/* loading/error banner */}
+      {errorMsg && (
+        <div className="container mx-auto px-8 pt-6">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm">
+            Failed to load content: {errorMsg}
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="container mx-auto px-8 py-16">
         <div className="grid grid-cols-12 gap-12 items-center">
           <div className="col-span-12 lg:col-span-5">
-            <img
-              src={PROFILE_IMAGE}
-              alt="Kanageshwaran Dhakshinamoorthy"
-              className="w-full h-auto rounded-lg shadow-lg object-cover aspect-square"
-            />
+            {profileImage && (
+              <img
+                src={profileImage}
+                alt={
+                  profile?.profile_image?.alt_text ??
+                  profile?.full_name ??
+                  "Profile"
+                }
+                className="w-full h-auto rounded-lg shadow-lg object-cover aspect-square"
+              />
+            )}
           </div>
 
           <div className="col-span-12 lg:col-span-7">
-            <h1 className="mb-6">Welcome to My Academic Portfolio</h1>
+            <h1 className="mb-6">
+              {profile?.hero_title ?? "Welcome to My Academic Portfolio"}
+            </h1>
+
             <p className="text-muted-foreground mb-8 text-lg">
-              I’m a Computer Science graduate from California State University, Sacramento, with a strong
-              interest in software engineering, cybersecurity, and full-stack development. This portfolio
-              highlights my academic work, technical projects, and the skills I’ve built through coursework
-              and hands-on labs.
+              {profile?.hero_description ??
+                "This portfolio showcases my academic journey, projects, and skills."}
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Button asChild>
+              <Button asChild disabled={loading}>
                 <Link to="/academic-work">View Academic Work</Link>
               </Button>
               <Button variant="outline" asChild>
@@ -45,62 +160,49 @@ export function Homepage() {
       {/* About Section */}
       <section id="about" className="container mx-auto px-8 py-16">
         <div className="max-w-4xl">
-          <h2 className="mb-6">About Me</h2>
+          <h2 className="mb-6">{profile?.about_title ?? "About Me"}</h2>
+
           <p className="text-muted-foreground mb-6 text-lg">
-            My interests include secure application development, databases, networking, and building modern
-            web/mobile applications. I enjoy turning ideas into clean, reliable software and learning by
-            implementing real solutions—from APIs and UI features to security testing and debugging.
-          </p>
-          <p className="text-muted-foreground mb-8 text-lg">
-            Beyond classes, I work on team-based projects and technical labs that strengthen my fundamentals
-            in system design, problem-solving, and writing clear documentation. I’m actively preparing for the
-            next step in my career and looking for opportunities where I can grow as a developer.
+            {profile?.about_paragraph_1 ?? ""}
           </p>
 
-          <Button variant="outline" asChild>
-            <a href="/resume.pdf" download>
-              <Download className="w-4 h-4 mr-2" />
-              Download Resume
-            </a>
-          </Button>
+          {profile?.about_paragraph_2 && (
+            <p className="text-muted-foreground mb-8 text-lg">
+              {profile.about_paragraph_2}
+            </p>
+          )}
+
+          {profile?.resume_url && (
+            <Button variant="outline" asChild>
+              <a
+                href={profile.resume_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Resume
+              </a>
+            </Button>
+          )}
         </div>
       </section>
 
       {/* Social Links */}
       <section className="container mx-auto px-8 py-8">
-        <div className="flex gap-6 justify-center">
-          <a
-            href="https://linkedin.com/in/dkanageshwaran"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="LinkedIn Profile"
-          >
-            <Linkedin className="w-6 h-6" />
-            <span>LinkedIn</span>
-          </a>
-
-          <a
-            href="https://github.com/Kanageshwaran"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="GitHub Profile"
-          >
-            <Github className="w-6 h-6" />
-            <span>GitHub</span>
-          </a>
-
-          <a
-            href="https://joinhandshake.com/profile/your-handshake-id"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Handshake Profile"
-          >
-            <Handshake className="w-6 h-6" />
-            <span>Handshake</span>
-          </a>
+        <div className="flex gap-6 justify-center flex-wrap">
+          {socialLinks.map((link) => (
+            <a
+              key={link.id}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={`${link.label} Profile`}
+            >
+              {iconForSocial(link.icon, link.label)}
+              <span>{link.label}</span>
+            </a>
+          ))}
         </div>
       </section>
 
@@ -115,7 +217,7 @@ export function Homepage() {
               className="col-span-12 md:col-span-6 lg:col-span-4 hover:shadow-lg transition-shadow"
             >
               <CardHeader>
-                <div className="text-4xl mb-2">{subject.icon}</div>
+                <div className="text-4xl mb-2">{subject.icon ?? "📘"}</div>
                 <CardTitle>{subject.name}</CardTitle>
                 <CardDescription>{subject.description}</CardDescription>
               </CardHeader>
@@ -131,7 +233,15 @@ export function Homepage() {
 
       {/* Other Activities */}
       <section className="container mx-auto px-8 py-16">
-        <h2 className="mb-8">Other Activities</h2>
+        <div className="flex items-end justify-between mb-8">
+          <h2>Other Activities</h2>
+          <Link
+            to="/activities"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View all ({activitiesCount})
+          </Link>
+        </div>
 
         <div className="grid grid-cols-12 gap-6">
           {activities.map((activity) => (
@@ -145,6 +255,12 @@ export function Homepage() {
               </CardHeader>
             </Card>
           ))}
+
+          {!loading && !activities.length && !errorMsg && (
+            <div className="col-span-12 text-muted-foreground">
+              No activities found yet. Add activities in Supabase → Table Editor → activities.
+            </div>
+          )}
         </div>
       </section>
 
@@ -153,10 +269,11 @@ export function Homepage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="mb-6">Get in Touch</h2>
           <p className="text-muted-foreground mb-8 text-lg">
-            I’m open to internships, full-time roles, and project collaborations. Feel free to reach out.
+            I'm always interested in collaborating on projects or discussing academic
+            opportunities. Feel free to reach out via email.
           </p>
-          <Button asChild size="lg">
-            <a href="mailto:kdhakshinamoorthy@csus.edu">Send Email</a>
+          <Button asChild size="lg" disabled={!profile?.email}>
+            <a href={`mailto:${profile?.email ?? ""}`}>Send Email</a>
           </Button>
         </div>
       </section>
