@@ -83,29 +83,46 @@ export async function fetchAssignmentsByCourse(courseId: string) {
 
 /* ------------------------
    Activities
+   Table: public.activities
+   View:  public.activities_count  (select count(*) as total ...)
 ------------------------ */
+
+// Landing page (all visible activities)
+export async function fetchActivities() {
+  return supabase
+    .from("activities")
+    .select(
+      "id,title,description,organization,location,start_date,end_date,sort_order,is_visible",
+    )
+    .eq("is_visible", true)
+    .order("sort_order", { ascending: true });
+}
+
+// Homepage preview (limit N)
 export async function fetchActivitiesPreview(limit = 4) {
   return supabase
     .from("activities")
-    .select("*")
+    .select("id,title,description,organization,location,start_date,end_date")
     .eq("is_visible", true)
     .order("sort_order", { ascending: true })
     .limit(limit);
 }
 
-export async function fetchActivitiesCount() {
+// Detail page (one activity)
+export async function fetchActivityById(activityId: string) {
   return supabase
     .from("activities")
-    .select("id", { count: "exact", head: true })
-    .eq("is_visible", true);
+    .select(
+      "id,title,description,story,organization,location,cover_image_url,start_date,end_date",
+    )
+    .eq("id", activityId)
+    .eq("is_visible", true)
+    .single();
 }
 
-export async function fetchActivitiesAll() {
-  return supabase
-    .from("activities")
-    .select("*")
-    .eq("is_visible", true)
-    .order("sort_order", { ascending: true });
+// Total count of visible activities (from view)
+export async function fetchActivitiesCount() {
+  return supabase.from("activities_count").select("total").single();
 }
 
 /* ------------------------

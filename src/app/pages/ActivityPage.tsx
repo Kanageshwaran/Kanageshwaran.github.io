@@ -3,15 +3,26 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { supabase } from "../../lib/supabaseClient";
+import { fetchActivityById } from "../../services/portfolioService";
 
 type ActivityDetailRow = {
   id: string;
   title: string;
-  description: string | null; // use as story for now
+  description: string | null; // short preview (optional to show)
+  story: string | null; // full story
   organization: string | null;
   location: string | null;
+  cover_image_url: string | null;
+  start_date: string | null;
+  end_date: string | null;
 };
+
+function formatDateRange(start: string | null, end: string | null) {
+  if (!start && !end) return null;
+  if (start && !end) return `From ${start}`;
+  if (!start && end) return `Until ${end}`;
+  return `${start} – ${end}`;
+}
 
 export function ActivityPage() {
   const { activityId } = useParams<{ activityId: string }>();
@@ -36,12 +47,7 @@ export function ActivityPage() {
       setLoading(true);
       setErrorMsg(null);
 
-      const res = await supabase
-        .from("activities")
-        .select("id,title,description,organization,location")
-        .eq("id", safeId)
-        .eq("is_visible", true)
-        .single();
+      const res = await fetchActivityById(safeId);
 
       if (!mounted) return;
 
@@ -76,6 +82,11 @@ export function ActivityPage() {
     );
   }
 
+  const dateRange = formatDateRange(
+    activity?.start_date ?? null,
+    activity?.end_date ?? null,
+  );
+
   return (
     <div className="w-full">
       <section className="container mx-auto px-8 py-16">
@@ -99,30 +110,58 @@ export function ActivityPage() {
           <div className="text-muted-foreground">Loading activity…</div>
         ) : (
           <>
+            {/* Title + short description */}
             <div className="mb-10">
               <h1 className="mb-4">{activity?.title}</h1>
+              {activity?.description && (
+                <p className="text-muted-foreground text-lg">
+                  {activity.description}
+                </p>
+              )}
             </div>
 
+            {/* Cover image */}
+            {activity?.cover_image_url && (
+              <div className="mb-10">
+                <img
+                  src={activity.cover_image_url}
+                  alt={activity?.title ?? "Activity"}
+                  className="w-full max-h-[420px] object-cover rounded-lg border"
+                />
+              </div>
+            )}
+
+            {/* Meta cards */}
             <div className="mb-10 grid grid-cols-12 gap-6">
-              <Card className="col-span-12 md:col-span-6">
+              <Card className="col-span-12 md:col-span-4">
                 <CardContent className="py-6 space-y-2">
-                  <div className="text-sm text-muted-foreground">Organization</div>
+                  <div className="text-sm text-muted-foreground">
+                    Organization
+                  </div>
                   <div className="text-base">{activity?.organization ?? "—"}</div>
                 </CardContent>
               </Card>
 
-              <Card className="col-span-12 md:col-span-6">
+              <Card className="col-span-12 md:col-span-4">
                 <CardContent className="py-6 space-y-2">
                   <div className="text-sm text-muted-foreground">Location</div>
                   <div className="text-base">{activity?.location ?? "—"}</div>
                 </CardContent>
               </Card>
+
+              <Card className="col-span-12 md:col-span-4">
+                <CardContent className="py-6 space-y-2">
+                  <div className="text-sm text-muted-foreground">Dates</div>
+                  <div className="text-base">{dateRange ?? "—"}</div>
+                </CardContent>
+              </Card>
             </div>
 
+            {/* Full story */}
             <div className="max-w-4xl">
               <h2 className="mb-4">Story</h2>
               <div className="text-muted-foreground text-lg whitespace-pre-line">
-                {activity?.description ?? "Story not added yet."}
+                {activity?.story ?? "Story not added yet."}
               </div>
             </div>
           </>

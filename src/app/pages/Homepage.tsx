@@ -41,13 +41,17 @@ type SubjectRow = {
   name: string;
   description: string;
   icon: string | null;
-  course_count?: number; // if using subjects_with_counts in preview, this will exist
+  course_count?: number;
 };
 
 type ActivityRow = {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
+  organization: string | null;
+  location: string | null;
+  start_date: string | null;
+  end_date: string | null;
 };
 
 function iconForSocial(icon: string | null, label: string) {
@@ -56,6 +60,13 @@ function iconForSocial(icon: string | null, label: string) {
   if (key.includes("github")) return <Github className="w-6 h-6" />;
   if (key.includes("handshake")) return <Handshake className="w-6 h-6" />;
   return null;
+}
+
+function formatDateRange(start: string | null, end: string | null) {
+  if (!start && !end) return null;
+  if (start && !end) return `From ${start}`;
+  if (!start && end) return `Until ${end}`;
+  return `${start} – ${end}`;
 }
 
 export function Homepage() {
@@ -84,17 +95,37 @@ export function Homepage() {
 
       if (!mounted) return;
 
-      if (p.error) return setErrorMsg(p.error.message);
-      if (s.error) return setErrorMsg(s.error.message);
-      if (subj.error) return setErrorMsg(subj.error.message);
-      if (actPreview.error) return setErrorMsg(actPreview.error.message);
-      if (actCount.error) return setErrorMsg(actCount.error.message);
+      if (p.error) {
+        setErrorMsg(p.error.message);
+        setLoading(false);
+        return;
+      }
+      if (s.error) {
+        setErrorMsg(s.error.message);
+        setLoading(false);
+        return;
+      }
+      if (subj.error) {
+        setErrorMsg(subj.error.message);
+        setLoading(false);
+        return;
+      }
+      if (actPreview.error) {
+        setErrorMsg(actPreview.error.message);
+        setLoading(false);
+        return;
+      }
+      if (actCount.error) {
+        setErrorMsg(actCount.error.message);
+        setLoading(false);
+        return;
+      }
 
       setProfile(p.data as ProfileRow);
       setSocialLinks((s.data ?? []) as SocialLinkRow[]);
       setSubjects((subj.data ?? []) as SubjectRow[]);
       setActivities((actPreview.data ?? []) as ActivityRow[]);
-      setActivitiesCount(actCount.count ?? 0);
+      setActivitiesCount(actCount.data?.total ?? 0);
 
       setLoading(false);
     }
@@ -228,6 +259,12 @@ export function Homepage() {
               </CardContent>
             </Card>
           ))}
+
+          {!loading && !subjects.length && !errorMsg && (
+            <div className="col-span-12 text-muted-foreground">
+              No subjects found yet. Add subjects in Supabase → Table Editor → subjects.
+            </div>
+          )}
         </div>
       </section>
 
@@ -244,17 +281,58 @@ export function Homepage() {
         </div>
 
         <div className="grid grid-cols-12 gap-6">
-          {activities.map((activity) => (
-            <Card
-              key={activity.id}
-              className="col-span-12 md:col-span-6 hover:shadow-lg transition-shadow"
-            >
-              <CardHeader>
-                <CardTitle>{activity.title}</CardTitle>
-                <CardDescription>{activity.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+          {activities.map((activity) => {
+            const dateRange = formatDateRange(activity.start_date, activity.end_date);
+
+            return (
+              <Card
+                key={activity.id}
+                className="col-span-12 md:col-span-6 hover:shadow-lg transition-shadow"
+              >
+                <CardHeader>
+                  <CardTitle>{activity.title}</CardTitle>
+                  <CardDescription className="text-base">
+                    {activity.description ?? "View details"}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {activity.organization && (
+                      <div>
+                        <span className="font-medium text-foreground/80">
+                          Organization:
+                        </span>{" "}
+                        {activity.organization}
+                      </div>
+                    )}
+                    {activity.location && (
+                      <div>
+                        <span className="font-medium text-foreground/80">
+                          Location:
+                        </span>{" "}
+                        {activity.location}
+                      </div>
+                    )}
+                    {dateRange && (
+                      <div>
+                        <span className="font-medium text-foreground/80">
+                          Dates:
+                        </span>{" "}
+                        {dateRange}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to={`/activities/${activity.id}`}>Read More</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {!loading && !activities.length && !errorMsg && (
             <div className="col-span-12 text-muted-foreground">
