@@ -1,0 +1,8 @@
+/* Global app background (applies to most pages) */
+.app-background {
+  background-image: var(--app-bg-image);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: contain; /* ladder always fully visible */
+  min-height: 100vh;
+}
