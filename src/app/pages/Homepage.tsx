@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Linkedin, Github, Handshake } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
@@ -138,6 +138,13 @@ export function Homepage() {
 
   const profileImage = profile?.profile_image?.public_url;
 
+  const contactLinks = useMemo(() => {
+    return socialLinks.filter((l) => {
+      const key = `${l.icon ?? ""} ${l.label}`.toLowerCase();
+      return key.includes("linkedin") || key.includes("handshake");
+    });
+  }, [socialLinks]);
+
   return (
     <div className="w-full">
       {/* loading/error banner */}
@@ -180,8 +187,10 @@ export function Homepage() {
               <Button asChild disabled={loading}>
                 <Link to="/academic-work">View Academic Work</Link>
               </Button>
+
+              {/* Change: send users to /contact page instead of homepage email section */}
               <Button variant="outline" asChild>
-                <a href="#contact">Get in Touch</a>
+                <Link to="/contact">Get in Touch</Link>
               </Button>
             </div>
           </div>
@@ -262,7 +271,8 @@ export function Homepage() {
 
           {!loading && !subjects.length && !errorMsg && (
             <div className="col-span-12 text-muted-foreground">
-              No subjects found yet. Add subjects in Supabase → Table Editor → subjects.
+              No subjects found yet. Add subjects in Supabase → Table Editor →
+              subjects.
             </div>
           )}
         </div>
@@ -282,7 +292,10 @@ export function Homepage() {
 
         <div className="grid grid-cols-12 gap-6">
           {activities.map((activity) => {
-            const dateRange = formatDateRange(activity.start_date, activity.end_date);
+            const dateRange = formatDateRange(
+              activity.start_date,
+              activity.end_date,
+            );
 
             return (
               <Card
@@ -336,23 +349,10 @@ export function Homepage() {
 
           {!loading && !activities.length && !errorMsg && (
             <div className="col-span-12 text-muted-foreground">
-              No activities found yet. Add activities in Supabase → Table Editor → activities.
+              No activities found yet. Add activities in Supabase → Table Editor
+              → activities.
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="container mx-auto px-8 py-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="mb-6">Get in Touch</h2>
-          <p className="text-muted-foreground mb-8 text-lg">
-            I'm always interested in collaborating on projects or discussing academic
-            opportunities. Feel free to reach out via email.
-          </p>
-          <Button asChild size="lg" disabled={!profile?.email}>
-            <a href={`mailto:${profile?.email ?? ""}`}>Send Email</a>
-          </Button>
         </div>
       </section>
     </div>

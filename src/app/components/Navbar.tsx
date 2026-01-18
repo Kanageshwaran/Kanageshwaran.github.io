@@ -55,8 +55,10 @@ export function Navbar() {
             </Link>
 
             <Link
-              to="/#contact"
-              className="transition-opacity hover:opacity-80 opacity-60"
+              to="/contact"
+              className={`transition-opacity hover:opacity-80 ${
+                isActive("/contact") ? "opacity-100" : "opacity-60"
+              }`}
             >
               Contact
             </Link>
