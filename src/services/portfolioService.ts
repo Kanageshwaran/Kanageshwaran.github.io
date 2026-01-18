@@ -26,6 +26,14 @@ export async function fetchSocialLinks() {
     .order("sort_order", { ascending: true });
 }
 
+export async function fetchAboutSections() {
+  return supabase
+    .from("about_page")
+    .select("id,title,content,sort_order")
+    .eq("is_visible", true)
+    .order("sort_order", { ascending: true });
+}
+
 /* ------------------------
    Subjects (with counts via view)
    Requires: public.subjects_with_counts view
@@ -61,10 +69,14 @@ export async function fetchCourseById(courseId: string) {
   return supabase.from("courses").select("*").eq("id", courseId).single();
 }
 
+/**
+ * NOTE: Your actual table name (from your screenshot) is `course_tool`
+ * with columns: id, course_id, tool, sort_order
+ */
 export async function fetchCourseTools(courseId: string) {
   return supabase
-    .from("course_tools")
-    .select("*")
+    .from("course_tool")
+    .select("id,course_id,tool,sort_order")
     .eq("course_id", courseId)
     .order("sort_order", { ascending: true });
 }
@@ -85,6 +97,10 @@ export async function fetchAssignmentsByCourse(courseId: string) {
    Activities
    Table: public.activities
    View:  public.activities_count  (select count(*) as total ...)
+
+   Columns used:
+   - list:   id,title,description,organization,location,start_date,end_date,...
+   - detail: + story, cover_image_url
 ------------------------ */
 
 // Landing page (all visible activities)
@@ -123,6 +139,23 @@ export async function fetchActivityById(activityId: string) {
 // Total count of visible activities (from view)
 export async function fetchActivitiesCount() {
   return supabase.from("activities_count").select("total").single();
+}
+
+/* ------------------------
+   Contact (Contact Page display)
+------------------------ */
+
+/**
+ * If you want *only* LinkedIn + Handshake (+ Email separately),
+ * call fetchContactLinks() from ContactPage.
+ */
+export async function fetchContactLinks() {
+  return supabase
+    .from("social_links")
+    .select("id,label,url,icon,sort_order,is_visible")
+    .eq("is_visible", true)
+    .or("label.ilike.%linkedin%,label.ilike.%handshake%,icon.ilike.%linkedin%,icon.ilike.%handshake%")
+    .order("sort_order", { ascending: true });
 }
 
 /* ------------------------

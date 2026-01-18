@@ -3,6 +3,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Homepage } from './pages/Homepage';
+import { AboutPage } from "./pages/AboutPage";
 import { AcademicWorkPage } from './pages/AcademicWorkPage';
 import { SubjectPage } from './pages/SubjectPage';
 import { CoursePage } from './pages/CoursePage';
@@ -21,6 +22,7 @@ export default function App() {
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Homepage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/academic-work" element={<AcademicWorkPage />} />
               <Route path="/subject/:subjectId" element={<SubjectPage />} />
               <Route path="/course/:courseId" element={<CoursePage />} />
