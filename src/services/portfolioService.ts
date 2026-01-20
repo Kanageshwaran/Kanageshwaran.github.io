@@ -75,7 +75,7 @@ export async function fetchCourseById(courseId: string) {
  */
 export async function fetchCourseTools(courseId: string) {
   return supabase
-    .from("course_tool")
+    .from("course_tools")
     .select("id,course_id,tool,sort_order")
     .eq("course_id", courseId)
     .order("sort_order", { ascending: true });
