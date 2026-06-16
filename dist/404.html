@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting…</title>
+    <script>
+      // GitHub Pages SPA redirect
+      var path = window.location.pathname;
+      var query = window.location.search;
+      var hash = window.location.hash;
+      window.location.replace(
+        window.location.origin +
+        "/?" +
+        "p=" +
+        encodeURIComponent(path + query + hash)
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
