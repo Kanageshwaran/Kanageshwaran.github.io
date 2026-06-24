@@ -3,8 +3,8 @@
 This repository contains the source code for my personal academic and professional portfolio website.  
 The site showcases my coursework, projects, activities, and background, and is built as a full-stack React application backed by Supabase.
 
-🌐 **Live Site:** https://kanageshwaran.github.io  
-📦 **Repository:** https://github.com/Kanageshwaran/Kanageshwaran.github.io
+🌐 **Live Site:** https://kanageshwaran.vercel.app  
+📦 **Repository:** https://github.com/Kanageshwaran/Kanageshwaran
 
 ---
 
@@ -31,7 +31,7 @@ The site showcases my coursework, projects, activities, and background, and is b
 
 **Deployment**
 
-- GitHub Pages
+- Vercel
 
 ---
 
@@ -53,7 +53,7 @@ src/
 
 ### 🏠 Home
 
-- Hero introduction
+- Introduction
 - Academic work preview
 - Activities preview
 - Social links
@@ -127,14 +127,6 @@ All read operations are abstracted through `portfolioService.ts`.
 
 ---
 
-## 🔐 Environment Variables
-
-Create a `.env.local` file:
-
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
 These are required for local development and production builds.
 
 📦 Local Development
@@ -165,7 +157,7 @@ Kanageshwaran Dhakshinamoorthy
 Computer Science Graduate
 📍 California, USA
 
-LinkedIn: https://www.linkedin.com
+LinkedIn: https://www.linkedin.com/in/dkanageshwaran
 
 GitHub: https://github.com/Kanageshwaran
 ```
